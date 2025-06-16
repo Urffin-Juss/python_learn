@@ -26,3 +26,26 @@ def mask_account_card(account_info: str) -> str:
         # Форматирование номера карты
         masked = f"{card_number[:4]} {card_number[4:6]}** **** {card_number[-4:]}"
         return ' '.join(parts[:-1] + [masked])
+
+
+from datetime import datetime
+
+
+def get_date(iso_date_string: str) -> str:
+    """
+    Преобразует дату из формата ISO 8601 в формат 'ДД.ММ.ГГГГ'
+
+    Args:
+        iso_date_string: Строка с датой в формате "2024-03-11T02:26:18.671407"
+
+    Returns:
+        str: Дата в формате "11.03.2024"
+    """
+    try:
+
+        dt = datetime.fromisoformat(iso_date_string)
+
+        return dt.strftime("%d.%m.%Y")
+    except (ValueError, TypeError):
+
+        return ""
