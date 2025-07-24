@@ -1,4 +1,4 @@
-
+from src.masks.widget import mask_account_card
 
 
 def test_mask_account_card(input_data, expected):
