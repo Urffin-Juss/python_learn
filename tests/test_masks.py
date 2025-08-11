@@ -1,7 +1,11 @@
 import coverage
-
+import os
 from src.masks import get_mask_card_number, get_mask_account
 from src.masks import filter_by_currency, transaction_descriptions
+import decorators.py
+from typing import Callable
+
+
 
 
 def test_get_mask_card_number():
@@ -93,3 +97,108 @@ def test_coverage():
     cov.stop()
     cov.save()
     assert cov.report() >= 80, "Покрытие кода должно быть не менее 80%"
+
+
+# Фикстура для тестовой функции
+@pytest.fixture
+def test_function() -> Callable:
+    @log()
+    def sample_func(x: int, y: int = 0) -> int:
+        """Тестовая функция для логирования"""
+        if y < 0:
+            raise ValueError("y must be non-negative")
+        return x + y
+
+    return sample_func
+
+
+# Фикстура для тестового файла
+@pytest.fixture
+def log_file(tmp_path) -> str:
+    return os.path.join(tmp_path, "test.log")
+
+
+# Тесты для логирования в консоль
+class TestConsoleLogging:
+    def test_successful_execution(self, test_function, capsys):
+        """Тест логирования успешного выполнения"""
+        result = test_function(2, 3)
+
+        captured = capsys.readouterr()
+        logs = captured.out.splitlines()
+
+        assert result == 5
+        assert "sample_func started" in logs[0]
+        assert "sample_func finished. Result: 5" in logs[1]
+        assert len(logs) == 2
+
+    def test_error_handling(self, test_function, capsys):
+        """Тест логирования ошибки"""
+        with pytest.raises(ValueError):
+            test_function(2, -1)
+
+        captured = capsys.readouterr()
+        logs = captured.out.splitlines()
+
+        assert "sample_func started" in logs[0]
+        assert "sample_func failed" in logs[1]
+        assert "ValueError: y must be non-negative" in logs[1]
+        assert len(logs) == 2
+
+
+# Тесты для логирования в файл
+class TestFileLogging:
+    def test_file_logging_success(self, log_file):
+        """Тест записи логов успешного выполнения в файл"""
+
+        @log(log_file)
+        def file_func(a: int, b: int) -> int:
+            return a * b
+
+        result = file_func(3, 4)
+
+        with open(log_file, 'r') as f:
+            logs = f.read().splitlines()
+
+        assert result == 12
+        assert "file_func started" in logs[0]
+        assert "file_func finished. Result: 12" in logs[1]
+        assert len(logs) == 2
+
+    def test_file_logging_error(self, log_file):
+        """Тест записи логов ошибки в файл"""
+
+        @log(log_file)
+        def error_func():
+            raise RuntimeError("Test error")
+
+        with pytest.raises(RuntimeError):
+            error_func()
+
+        with open(log_file, 'r') as f:
+            logs = f.read().splitlines()
+
+        assert "error_func started" in logs[0]
+        assert "error_func failed" in logs[1]
+        assert "RuntimeError: Test error" in logs[1]
+        assert len(logs) == 2
+
+
+# Тест метаданных функции
+def test_function_metadata_preserved(test_function):
+    """Тест сохранения метаданных функции"""
+    assert test_function.__name__ == "sample_func"
+    assert test_function.__doc__ == "Тестовая функция для логирования"
+
+
+# Тест временных меток
+def test_timestamp_format(test_function, capsys):
+    """Тест формата временных меток в логах"""
+    test_function(1, 1)
+    captured = capsys.readouterr()
+
+    timestamp = captured.out.split(' - ')[0]
+    try:
+        datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        pytest.fail("Invalid timestamp format")
