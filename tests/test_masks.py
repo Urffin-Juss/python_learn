@@ -1,10 +1,21 @@
 from src.masks import get_mask_card_number, get_mask_account
 
-def test_get_mask_card_number():
-    assert get_mask_card_number("7000792289606361") == "7000 79** **** 6361"
-    assert get_mask_card_number("Visa 7000792289606361") == "7000 79** **** 6361"  # Проверка с лишними символами
-    assert get_mask_card_number("1234567890123456") == "1234 56** **** 3456"
+@pytest.mark.parametrize("input_card, expected_output", [
+    ("7000792289606361", "7000 79** **** 6361"),
+    ("Visa 7000792289606361", "7000 79** **** 6361"),  # Проверка с лишними символами
+    ("1234567890123456", "1234 56** **** 3456"),
+    ("", ""),  # Пустая строка
+    ("1234", "1234"),  # Слишком короткий номер
+])
+def test_get_mask_card_number(input_card, expected_output):
+    assert get_mask_card_number(input_card) == expected_output
 
-def test_get_mask_account():
-    assert get_mask_account("73654108430135874305") == "**4305"
-    assert get_mask_account("1234567890") == "**7890"
+
+@pytest.mark.parametrize("input_account, expected_output", [
+    ("73654108430135874305", "**4305"),
+    ("1234567890", "**7890"),
+    ("", ""),  # Пустая строка
+    ("123", "**123"),  # Слишком короткий номер
+])
+def test_get_mask_account(input_account, expected_output):
+    assert get_mask_account(input_account) == expected_output
