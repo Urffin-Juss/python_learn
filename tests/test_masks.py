@@ -1,5 +1,8 @@
 import coverage
-
+import pytest
+from utils import load_transactions
+import json
+import os
 from src.masks import get_mask_card_number, get_mask_account
 from src.masks import filter_by_currency, transaction_descriptions
 
@@ -93,3 +96,34 @@ def test_coverage():
     cov.stop()
     cov.save()
     assert cov.report() >= 80, "Покрытие кода должно быть не менее 80%"
+
+
+def test_load_nonexistent_file(tmp_path):
+    """Тест загрузки несуществующего файла"""
+    result = load_transactions(str(tmp_path / "nonexistent.json"))
+    assert result == []
+
+def test_load_empty_file(tmp_path):
+    """Тест загрузки пустого файла"""
+    empty_file = tmp_path / "empty.json"
+    empty_file.touch()
+    result = load_transactions(str(empty_file))
+    assert result == []
+
+def test_load_invalid_json(tmp_path):
+    """Тест загрузки файла с некорректным JSON"""
+    invalid_file = tmp_path / "invalid.json"
+    invalid_file.write_text("{invalid json")
+    result = load_transactions(str(invalid_file))
+    assert result == []
+
+def test_load_valid_transactions(tmp_path):
+    """Тест загрузки корректного файла"""
+    test_data = [
+        {"id": 1, "amount": 100, "currency": "USD"},
+        {"id": 2, "amount": 200, "currency": "EUR"}
+    ]
+    valid_file = tmp_path / "valid.json"
+    valid_file.write_text(json.dumps(test_data))
+    result = load_transactions(str(valid_file))
+    assert result == test_data
