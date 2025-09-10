@@ -3,58 +3,74 @@ import functools
 from datetime import datetime
 from typing import Optional, Callable
 import inspect
+import logging
+
+
+def setup_logging(filename: Optional[str] = None, level=logging.Debug):
+    """
+        Настраивает логирование для модуля
+
+        Args:
+            filename: Имя файла для логирования
+            level: Уровень логирования
+        """
+    logger = logging.getLogger(__name__)
+    logger.setLevel(level)
+
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
+    # Обработчик (файл или консоль)
+    if filename:
+        handler = logging.FileHandler(filename, encoding='utf-8')
+    else:
+        handler = logging.StreamHandler(sys.stdout)
+
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    return logger
 
 
 def patch_module_with_logging(module, filename: Optional[str] = None):
-    """
-    Патчит все функции в модуле автоматическим логированием
 
-    Args:
-        module: Модуль для патчинга
-        filename: Имя файла для логирования (если None - логи в консоль)
-    """
+    logger = setup_logging(filename, logging.DEBUG)
+
     for name in dir(module):
         obj = getattr(module, name)
-        if (callable(obj) and
-                not name.startswith('_') and
-                not inspect.isclass(obj) and
-                not inspect.ismodule(obj)):
-            setattr(module, name, _add_logging_to_function(obj, filename))
+        if (_is_loggable_function(obj, name)):
+            setattr(module, name, _add_logging_to_function(obj, logger))
 
 
-def _add_logging_to_function(func: Callable, filename: Optional[str] = None):
+def _is_loggable_function(obj, name: str) -> bool:
+    """Проверяет, нужно ли добавлять логирование к функции"""
+    return (callable(obj) and
+            not name.startswith('_') and
+            not inspect.isclass(obj) and
+            not inspect.ismodule(obj))
+
+
+def _add_logging_to_function(func: Callable, logger: logging.Logger):
     """Добавляет логирование к функции"""
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         func_name = func.__name__
-        params = f"args: {args}, kwargs: {kwargs}"
 
         # Логируем начало выполнения
-        start_entry = f"{timestamp} - {func_name} started with {params}\n"
-        _write_log(start_entry, filename)
+        logger.debug(f"{func_name} started with args: {args}, kwargs: {kwargs}")
 
         try:
             result = func(*args, **kwargs)
             # Логируем успешное завершение
-            success_entry = f"{timestamp} - {func_name} finished. Result: {result}\n"
-            _write_log(success_entry, filename)
+            logger.debug(f"{func_name} finished. Result: {result}")
             return result
 
         except Exception as e:
             # Логируем ошибку
-            error_entry = f"{timestamp} - {func_name} failed. Error: {type(e).__name__}: {e}\n"
-            _write_log(error_entry, filename)
+            logger.error(f"{func_name} failed. Error: {type(e).__name__}: {e}")
             raise
 
     return wrapper
-
-
-def _write_log(message: str, filename: Optional[str] = None):
-    """Записывает лог в файл или консоль"""
-    if filename:
-        with open(filename, 'a', encoding='utf-8') as f:
-            f.write(message)
-    else:
-        print(message, end='')
