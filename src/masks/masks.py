@@ -1,4 +1,4 @@
-from logg_funcimport patch_module_with_logging
+from logg_func import patch_module_with_logging
 import sys
 
 
