@@ -1,6 +1,8 @@
 import json
 from typing import List, Dict
 import os
+from logg_func import patch_module_with_logging
+import sys
 
 
 file_path = os.path.join('data', 'operations.json')
@@ -43,3 +45,6 @@ def load_transactions(file_path: str) -> List[Dict]:
     except (json.JSONDecodeError, IOError, OSError):
         # Обрабатываем ошибки чтения файла и парсинга JSON
         return []
+
+
+patch_module_with_logging(sys.modules[__name__], 'log_utils.log')
