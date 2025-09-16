@@ -47,14 +47,8 @@ def get_mask_account(account: typing.Any) -> str:
         return " ".join(filter_list)
 
 
+patch_module_with_logging(sys.modules[__name__], 'log_masks.log')
+
 if __name__ == "__main__":
     result = get_mask_account(input("Enter account: "))
     print(result)
-
-
-
-
-
-
-
-patch_module_with_logging(sys.modules[__name__], 'log_masks.log')

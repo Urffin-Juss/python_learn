@@ -6,7 +6,7 @@ import sys
 
 
 file_path = os.path.join('data', 'operations.json')
-transactions = load_transactions(file_path)
+
 
 def load_transactions(file_path: str) -> List[Dict]:
     """

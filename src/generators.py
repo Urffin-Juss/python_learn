@@ -1,5 +1,6 @@
 from typing import Dict, Iterator
 
+
 def filter_by_currency(transactions: list[Dict], currency: str) -> Iterator[Dict]:
     """
         Фильтрует транзакции по указанной валюте и возвращает итератор.
@@ -13,7 +14,6 @@ def filter_by_currency(transactions: list[Dict], currency: str) -> Iterator[Dict
         """
     return (transaction for transaction in transactions
             if transaction.get('currency', '').upper() == currency.upper())
-
 
 
 def transaction_descriptions(transactions: list[Dict]) -> Iterator[str]:
