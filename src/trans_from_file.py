@@ -4,10 +4,6 @@ import os
 from dotenv import load_dotenv
 
 
-
-# Создаем логгер
-logger = setup_logger(__name__)
-
 # Загружаем настройки из .env
 load_dotenv()
 
