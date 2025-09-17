@@ -13,11 +13,10 @@ logger = setup_logger(__name__)
 load_dotenv()
 
 
-def read_financial_transactions_from_gsi(file_path=None):
+def read_financial_transactions_from_csv(file_path= None):
     """Читает транзакции из CSV файла"""
     if file_path is None:
-        file_path = os.getenv('GSI_FILE_PATH')
-
+        file_path = os.getenv('CSV_FILE_PATH')
     logger.info(f"Чтение GSI файла: {file_path}")
 
     try:

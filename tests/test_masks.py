@@ -2,11 +2,11 @@ import coverage
 import pytest
 from utils import load_transactions
 import json
-import os
 from src.masks import get_mask_card_number, get_mask_account
 from src.masks import filter_by_currency, transaction_descriptions
 from unittest.mock import patch, Mock
 from external_api import convert_to_rub, get_exchange_rate
+from financial_reader import read_financial_transactions_from_csv
 
 def test_get_mask_card_number():
     assert get_mask_card_number("7000792289606361") == "7000 79** **** 6361"
@@ -186,3 +186,24 @@ def test_invalid_currency(mock_get):
 
     with pytest.raises(ValueError, match="not found in API response"):
         get_exchange_rate("INVALID")
+
+
+class TestSimpleFinancialReader(unittest.TestCase):
+
+    @patch('builtins.open', mock_open(read_data='date,amount\ntest,1000'))
+    @patch('csv.DictReader')
+    def test_read_csv_simple(self, mock_dict_reader):
+        """Простой тест без создания реальных файлов"""
+        # Мокаем данные которые вернет DictReader
+        mock_dict_reader.return_value = [
+            {'date': 'test', 'amount': '1000'}
+        ]
+
+        result = read_financial_transactions_from_csv('any_file.csv')
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['amount'], '1000')
+
+
+if __name__ == '__main__':
+    unittest.main()
