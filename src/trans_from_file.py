@@ -1,5 +1,6 @@
 import csv
 import pandas as pd
+import os
 
 
 def reads_financial_transactions(file_path):
