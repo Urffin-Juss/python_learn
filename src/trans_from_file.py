@@ -2,7 +2,7 @@ import csv
 import pandas as pd
 import os
 from dotenv import load_dotenv
-from logg_func import setup_logging, _add_logging_to_function
+from logg_func import setup_logging
 
 # Загружаем настройки из .env
 load_dotenv()
