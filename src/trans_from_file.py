@@ -3,8 +3,7 @@ import pandas as pd
 import os
 from dotenv import load_dotenv
 
-# Импортируем ваш логгер
-from your_logging_module import setup_logger
+
 
 # Создаем логгер
 logger = setup_logger(__name__)
@@ -17,7 +16,7 @@ def read_financial_transactions_from_csv(file_path= None):
     """Читает транзакции из CSV файла"""
     if file_path is None:
         file_path = os.getenv('CSV_FILE_PATH')
-    logger.info(f"Чтение GSI файла: {file_path}")
+    logger.info(f"Чтение  CSV файла: {file_path}")
 
     try:
         with open(file_path, "r", encoding="UTF-8") as file:
