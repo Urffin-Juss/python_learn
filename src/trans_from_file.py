@@ -23,7 +23,7 @@ def read_financial_transactions_from_csv(file_path= None):
             logger.info(f"Прочитано {len(transactions)} транзакций")
             return transactions
     except Exception as e:
-        logger.error(f"Ошибка чтения GSI: {e}")
+        logger.error(f"Ошибка чтения CSV: {e}")
         raise
 
 
