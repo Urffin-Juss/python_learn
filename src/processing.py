@@ -1,3 +1,7 @@
+from datetime import datetime
+from typing import Dict, Any
+
+
 def filter_by_state(transactions: list[dict], state: str = 'EXECUTED') -> list[dict]:
     """
     Фильтрует список словарей по значению ключа 'state'.
@@ -25,13 +29,27 @@ def sort_by_date(transactions: list[dict], reverse: bool = True) -> list[dict]:
         Отсортированный список словарей
     """
 
-def get_date(item):
+
+def get_date(item: Dict[str, Any]) -> datetime:
+    """
+    Извлекает дату из элемента транзакции.
+
+    Args:
+        item: Словарь с данными транзакции
+
+    Returns:
+        datetime: Объект datetime или datetime.min для некорректных/отсутствующих дат
+    """
     date_str = item.get('date')
+
     if date_str:
         try:
-            return datetime.fromisoformat(date_str)
+            # Пробуем разные форматы дат
+            if isinstance(date_str, str):
+                return datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+            elif hasattr(date_str, 'strftime'):  # Если это уже datetime объект
+                return date_str
         except (ValueError, TypeError):
-            return datetime.min  # Для некорректных дат
-    return datetime.min  # Для отсутствующих дат
+            pass
 
-return sorted(transactions, key=get_date, reverse=reverse)
+    return datetime.min  # Для некорректных или отсутствующих дат
