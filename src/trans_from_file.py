@@ -1,4 +1,6 @@
 import csv
+import logging
+
 import pandas as pd
 import os
 from dotenv import load_dotenv
@@ -6,7 +8,7 @@ from logg_func import setup_logging
 
 # Загружаем настройки из .env
 load_dotenv()
-logger = setup_logging(filename='financial_reader.log', level=logging.INFO)
+logger = setup_logging(filename='financial_reader.log', level=logging.DEBUG)
 
 def read_financial_transactions_from_csv(file_path= None):
     """Читает транзакции из CSV файла"""
