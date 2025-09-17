@@ -1,6 +1,5 @@
 from logg_func import patch_module_with_logging
 import sys
-
 import typing
 
 
@@ -48,6 +47,7 @@ def get_mask_account(account: typing.Any) -> str:
 
 
 patch_module_with_logging(sys.modules[__name__], 'log_masks.log')
+
 
 if __name__ == "__main__":
     result = get_mask_account(input("Enter account: "))
