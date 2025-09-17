@@ -2,11 +2,11 @@ import csv
 import pandas as pd
 import os
 from dotenv import load_dotenv
-
+from logg_func import setup_logging, _add_logging_to_function
 
 # Загружаем настройки из .env
 load_dotenv()
-
+logger = setup_logging(filename='financial_reader.log', level=logging.INFO)
 
 def read_financial_transactions_from_csv(file_path= None):
     """Читает транзакции из CSV файла"""
