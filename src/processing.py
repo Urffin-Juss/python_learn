@@ -25,6 +25,11 @@ def sort_by_date(transactions: list[dict], reverse: bool = True) -> list[dict]:
         Отсортированный список словарей
     """
 
+
+def filter_by_keyword(data, word):
+    return [op for op in data if word.lower() in op.get("description", "").lower()]
+
+
 def get_date(item):
     date_str = item.get('date')
     if date_str:

@@ -43,3 +43,12 @@ def load_transactions(file_path: str) -> List[Dict]:
     except (json.JSONDecodeError, IOError, OSError):
         # Обрабатываем ошибки чтения файла и парсинга JSON
         return []
+
+def print_operations(data):
+        print(f"Программа: Всего банковских операций в выборке: {len(data)}")
+        for op in data:
+            date = op.get("date", "")
+            desc = op.get("description", "")
+            amount = op.get("operationAmount", {}).get("amount", "")
+            currency = op.get("operationAmount", {}).get("currency", {}).get("name", "")
+            print(f"\n{date} {desc}\nСумма: {amount} {currency}")
