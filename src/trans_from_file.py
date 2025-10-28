@@ -42,3 +42,26 @@ def read_financial_transactions_from_excel(file_path=None):
     except Exception as e:
         logger.error(f"Ошибка чтения Excel: {e}")
         raise
+
+
+def read_financial_transactions_from_json() -> list[dict]:
+    """
+    Читает финансовые транзакции из JSON-файла.
+    Ожидается, что файл находится в каталоге data и содержит список словарей.
+    """
+    file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "operations.json")
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if isinstance(data, list):
+                return data
+            else:
+                print("Программа: Ошибка — JSON-файл должен содержать список операций.")
+                return []
+    except FileNotFoundError:
+        print("Программа: Файл JSON не найден.")
+        return []
+    except json.JSONDecodeError:
+        print("Программа: Ошибка чтения JSON-файла.")
+        return []
