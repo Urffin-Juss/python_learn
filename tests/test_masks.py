@@ -1,8 +1,12 @@
 import coverage
-
+import pytest
+from utils import load_transactions
+import json
 from src.masks import get_mask_card_number, get_mask_account
 from src.masks import filter_by_currency, transaction_descriptions
-
+from unittest.mock import patch, Mock
+from external_api import convert_to_rub, get_exchange_rate
+from financial_reader import read_financial_transactions_from_csv
 
 def test_get_mask_card_number():
     assert get_mask_card_number("7000792289606361") == "7000 79** **** 6361"
@@ -93,3 +97,113 @@ def test_coverage():
     cov.stop()
     cov.save()
     assert cov.report() >= 80, "Покрытие кода должно быть не менее 80%"
+
+
+def test_load_nonexistent_file(tmp_path):
+    """Тест загрузки несуществующего файла"""
+    result = load_transactions(str(tmp_path / "nonexistent.json"))
+    assert result == []
+
+def test_load_empty_file(tmp_path):
+    """Тест загрузки пустого файла"""
+    empty_file = tmp_path / "empty.json"
+    empty_file.touch()
+    result = load_transactions(str(empty_file))
+    assert result == []
+
+def test_load_invalid_json(tmp_path):
+    """Тест загрузки файла с некорректным JSON"""
+    invalid_file = tmp_path / "invalid.json"
+    invalid_file.write_text("{invalid json")
+    result = load_transactions(str(invalid_file))
+    assert result == []
+
+def test_load_valid_transactions(tmp_path):
+    """Тест загрузки корректного файла"""
+    test_data = [
+        {"id": 1, "amount": 100, "currency": "USD"},
+        {"id": 2, "amount": 200, "currency": "EUR"}
+    ]
+    valid_file = tmp_path / "valid.json"
+    valid_file.write_text(json.dumps(test_data))
+    result = load_transactions(str(valid_file))
+    assert result == test_data
+
+
+@pytest.fixture
+def sample_transactions():
+    return [
+        {"amount": "100", "currency": "RUB"},
+        {"amount": "50", "currency": "USD"},
+        {"amount": "75", "currency": "EUR"},
+        {"amount": "200", "currency": "GBP"},
+    ]
+
+
+def test_convert_rub_transaction(sample_transactions):
+    """Тест конвертации RUB транзакции"""
+    result = convert_to_rub(sample_transactions[0])
+    assert result == 100.0
+
+
+@patch('external_api.requests.get')
+def test_convert_usd_transaction(mock_get, sample_transactions):
+    """Тест конвертации USD транзакции с моком API"""
+    # Мок ответа API
+    mock_response = Mock()
+    mock_response.json.return_value = {"rates": {"RUB": 75.5}, "success": True}
+    mock_response.raise_for_status.return_value = None
+    mock_get.return_value = mock_response
+
+    result = convert_to_rub(sample_transactions[1])
+    assert result == 50 * 75.5
+
+
+@patch('external_api.requests.get')
+def test_api_error_handling(mock_get):
+    """Тест обработки ошибок API"""
+    mock_get.side_effect = requests.exceptions.ConnectionError("API unavailable")
+
+    with pytest.raises(ConnectionError):
+        get_exchange_rate("USD")
+
+
+def test_missing_api_key(monkeypatch):
+    """Тест отсутствия API ключа"""
+    monkeypatch.delenv('EXCHANGE_RATES_API_KEY', raising=False)
+
+    with pytest.raises(ValueError, match="API key not found"):
+        get_exchange_rate("USD")
+
+
+@patch('external_api.requests.get')
+def test_invalid_currency(mock_get):
+    """Тест невалидной валюты"""
+    mock_response = Mock()
+    mock_response.json.return_value = {"rates": {}, "success": True}
+    mock_response.raise_for_status.return_value = None
+    mock_get.return_value = mock_response
+
+    with pytest.raises(ValueError, match="not found in API response"):
+        get_exchange_rate("INVALID")
+
+
+class TestSimpleFinancialReader(unittest.TestCase):
+
+    @patch('builtins.open', mock_open(read_data='date,amount\ntest,1000'))
+    @patch('csv.DictReader')
+    def test_read_csv_simple(self, mock_dict_reader):
+        """Простой тест без создания реальных файлов"""
+        # Мокаем данные которые вернет DictReader
+        mock_dict_reader.return_value = [
+            {'date': 'test', 'amount': '1000'}
+        ]
+
+        result = read_financial_transactions_from_csv('any_file.csv')
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['amount'], '1000')
+
+
+if __name__ == '__main__':
+    unittest.main()
